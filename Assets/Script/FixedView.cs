@@ -11,7 +11,7 @@ public class FixedView : Aview
 
     public override CameraConfiguration GetConfiguration() 
     {
-    
-    
+       //Vector3 Transform 
+       
     }
 }
