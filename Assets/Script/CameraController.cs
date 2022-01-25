@@ -7,7 +7,10 @@ public class CameraController : MonoBehaviour
     CameraController instance;
 
     public Camera camera;
-    public CameraConfiguration configuration;
+    
+
+    private List<Aview> activeViews = new List<Aview>();
+    private List<CameraConfiguration> configurations = new List<CameraConfiguration>();
 
     private void Awake()
     {
@@ -24,19 +27,37 @@ public class CameraController : MonoBehaviour
 
     private void Start()
     {
-        DrawGizmos(Color.red);   
+          
     }
 
-    public void DrawGizmos(Color color)
+    private void Update()
     {
-        Gizmos.color = color;
-        Gizmos.DrawSphere(configuration.pivot, 0.25f);
-        Vector3 position = configuration.GetPosition();
-        Gizmos.DrawLine(configuration.pivot, position);
-        Gizmos.matrix = Matrix4x4.TRS(position, configuration.GetRotation(), Vector3.one);
-        Gizmos.DrawFrustum(Vector3.zero, configuration.fov, 0.5f, 0f, Camera.main.aspect);
-        Gizmos.matrix = Matrix4x4.identity;
+        
     }
+
+    public float ComputeAverageYaw()
+    {
+        Vector2 sum = Vector2.zero;
+        foreach (CameraConfiguration config in configurations)
+        {
+            sum += new Vector2(Mathf.Cos(config.yaw * Mathf.Deg2Rad),
+            Mathf.Sin(config.yaw * Mathf.Deg2Rad)) * config.weight;
+        }
+        return Vector2.SignedAngle(Vector2.right, sum);
+    }
+
+    void addView(Aview view) 
+    {
+        activeViews.Add(view);
+    
+    }
+
+    void removeView(Aview aview) 
+    {
+        activeViews.Remove(aview);
+    }
+
+    
 
 
     public void ApplyConfiguration(Camera camera, CameraConfiguration configuration) 
