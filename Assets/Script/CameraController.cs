@@ -7,8 +7,10 @@ public class CameraController : MonoBehaviour
     public static CameraController instance;
 
     public Camera camera;
-    
-
+    private Vector3 pos2;
+    public FixedView currentConfig;
+    public FixedView targetConfig;
+   
     private List<Aview> activeViews = new List<Aview>();
     
 
@@ -27,11 +29,18 @@ public class CameraController : MonoBehaviour
 
     private void Start()
     {
-          
+        //pos2 = new Vector3(ComputeAverageRoll(), ComputeAveragePitch(), ComputeAverageYaw());
+        
+         
     }
+
+   
 
     private void Update()
     {
+        
+        /*float T = Time.deltaTime ;
+         transform.position = Vector3.Lerp(transform.position, pos2, T);*/
         
     }
 
