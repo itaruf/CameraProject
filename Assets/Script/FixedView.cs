@@ -14,6 +14,10 @@ public class FixedView : Aview
         CameraConfiguration config = new CameraConfiguration();
         config.distance = 0;
         config.pivot = transform.position;
+        config.yaw = yaw;
+        config.pitch = pitch;
+        config.roll = roll;
+        config.fov = fov;
         return  config;
        
     }

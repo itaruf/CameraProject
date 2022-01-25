@@ -4,13 +4,13 @@ using UnityEngine;
 
 public class CameraController : MonoBehaviour
 {
-    CameraController instance;
+    public static CameraController instance;
 
     public Camera camera;
     
 
     private List<Aview> activeViews = new List<Aview>();
-    private List<CameraConfiguration> configurations = new List<CameraConfiguration>();
+    
 
     private void Awake()
     {
@@ -38,21 +38,50 @@ public class CameraController : MonoBehaviour
     public float ComputeAverageYaw()
     {
         Vector2 sum = Vector2.zero;
-        foreach (CameraConfiguration config in configurations)
+        foreach (Aview view in activeViews)
         {
+            CameraConfiguration config = view.GetConfiguration();
             sum += new Vector2(Mathf.Cos(config.yaw * Mathf.Deg2Rad),
-            Mathf.Sin(config.yaw * Mathf.Deg2Rad)) * config.weight;
+                Mathf.Sin(config.yaw * Mathf.Deg2Rad)) * view.weight;
         }
         return Vector2.SignedAngle(Vector2.right, sum);
     }
 
-    void addView(Aview view) 
+    public float ComputeAverageRoll() 
+    {
+        float sum = 0;
+        float weights = 0;
+        foreach (Aview view in activeViews)
+        {
+            CameraConfiguration config = view.GetConfiguration();
+            weights += view.weight;
+            sum += config.roll * view.weight;
+               
+        }
+        return sum/weights;
+    }
+
+    public float ComputeAveragePitch()
+    {
+        float sum = 0;
+        float weights = 0;
+        foreach (Aview view in activeViews)
+        {
+            CameraConfiguration config = view.GetConfiguration();
+            weights += view.weight;
+            sum += config.pitch * view.weight;
+
+        }
+        return sum / weights;
+    }
+
+    public void addView(Aview view) 
     {
         activeViews.Add(view);
     
     }
 
-    void removeView(Aview aview) 
+    public void removeView(Aview aview) 
     {
         activeViews.Remove(aview);
     }

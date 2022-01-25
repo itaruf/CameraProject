@@ -15,11 +15,23 @@ public abstract class Aview : MonoBehaviour
         {
             SetActive(isActiveOnStart);
         }
+        
     }
 
     public void SetActive(bool isActive) 
     {
-        gameObject.SetActive(isActive);
+        if (isActive) 
+        {
+            CameraController.instance.addView(this);
+        }
+
+
+        else
+        {
+            CameraController.instance.removeView(this);
+        }
+        
+        
                            
     }
 }
