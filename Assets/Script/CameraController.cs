@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -12,7 +13,7 @@ public class CameraController : MonoBehaviour
     private List<Aview> activeViews = new List<Aview>();
 
     private FixedView currentConfig;
-    public  FixedView targetConfig;
+    private Vector3 targetConfig;
     public float speed;
     public float time;
 
@@ -47,18 +48,66 @@ public class CameraController : MonoBehaviour
 
         time = 0;
 
+        // Target
+        targetConfig.z = ComputeAverageYaw();
+        targetConfig.y = ComputeAveragePitch();
+        targetConfig.x = ComputeAverageYaw();
+
+
     }
 
     private void Update()
     {
         Debug.Log(transform.position);
 
-        if (time < 1) {
+        /*if (time < 1) {
             time = Time.deltaTime * 0.1f;
             transform.position = transform.position + (new Vector3(targetConfig.roll, targetConfig.pitch, targetConfig.yaw) - transform.position) * time;
         }
         else
-            transform.position = new Vector3(targetConfig.roll, targetConfig.pitch, targetConfig.yaw);
+            transform.position = new Vector3(targetConfig.roll, targetConfig.pitch, targetConfig.yaw);*/
+
+        Vector3 pos = transform.position;
+
+        // 3 
+
+        /*if (time < 1)
+        {
+            time = Time.deltaTime * 0.1f;
+            //pos.z = transform.position.z + (targetConfig.yaw - transform.position.z) * time;
+            pos.z = new Vector2(Mathf.Cos(transform.position.z + Mathf.Deg2Rad), Mathf.Sin(transform.position.z * Mathf.Deg2Rad)).y 
+                + 
+                (new Vector2(Mathf.Cos(targetConfig.yaw * Mathf.Deg2Rad), Mathf.Sin(targetConfig.yaw * Mathf.Deg2Rad)).y - new Vector2(Mathf.Cos(transform.position.z + Mathf.Deg2Rad), Mathf.Sin(transform.position.z * Mathf.Deg2Rad)).y) * time;
+            pos.y = transform.position.y + (targetConfig.pitch - transform.position.y) * time;
+            pos.x = transform.position.x + (targetConfig.roll - transform.position.x) * time;
+        }
+        else
+            pos = new Vector3(targetConfig.roll, targetConfig.pitch, targetConfig.yaw);*/
+
+
+        // 4
+
+        /*float time = Time.deltaTime * speed;
+
+        foreach (Aview activeView in activeViews)
+        {
+            FixedFollowView tmp = (FixedFollowView) activeView;
+
+            if (tmp)
+            {
+                Debug.Log("in");
+
+                if (time < 1)
+                    tmp.pos = Vector3.Lerp(tmp.pos, tmp.target.transform.position, time);
+                else
+                    tmp.pos = tmp.target.transform.position;
+            }
+            break;
+        }*/
+
+        // 5
+
+
     }
 
     public float ComputeAverageYaw()
