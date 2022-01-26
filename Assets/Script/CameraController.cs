@@ -8,11 +8,13 @@ public class CameraController : MonoBehaviour
 
     public Camera camera;
     private Vector3 pos2;
-    public FixedView currentConfig;
-    public FixedView targetConfig;
-   
+
     private List<Aview> activeViews = new List<Aview>();
-    
+
+    private FixedView currentConfig;
+    public  FixedView targetConfig;
+    public float speed;
+    public float time;
 
     private void Awake()
     {
@@ -29,19 +31,34 @@ public class CameraController : MonoBehaviour
 
     private void Start()
     {
-        //pos2 = new Vector3(ComputeAverageRoll(), ComputeAveragePitch(), ComputeAverageYaw());
-        
-         
-    }
+        FixedView fixedView = GetComponent<FixedView>();
+        currentConfig = new FixedView();
 
-   
+        // Fixing position
+        transform.position = new Vector3(fixedView.roll, fixedView.pitch, fixedView.yaw);
+        camera.fieldOfView = fixedView.fov;
+
+        // Current Fixed View
+        currentConfig.weight = fixedView.weight;
+        currentConfig.yaw = fixedView.yaw;
+        currentConfig.pitch = fixedView.pitch;
+        currentConfig.roll = fixedView.roll;
+        currentConfig.fov = fixedView.fov;
+
+        time = 0;
+
+    }
 
     private void Update()
     {
-        
-        /*float T = Time.deltaTime ;
-         transform.position = Vector3.Lerp(transform.position, pos2, T);*/
-        
+        Debug.Log(transform.position);
+
+        if (time < 1) {
+            time = Time.deltaTime * 0.1f;
+            transform.position = transform.position + (new Vector3(targetConfig.roll, targetConfig.pitch, targetConfig.yaw) - transform.position) * time;
+        }
+        else
+            transform.position = new Vector3(targetConfig.roll, targetConfig.pitch, targetConfig.yaw);
     }
 
     public float ComputeAverageYaw()

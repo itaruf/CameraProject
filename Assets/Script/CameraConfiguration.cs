@@ -12,8 +12,6 @@ using UnityEngine;
     public float distance;
     public float fov;
 
-
-
     public Quaternion GetRotation() 
     {
 
