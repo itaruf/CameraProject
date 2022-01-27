@@ -6,32 +6,37 @@ public class Rail : MonoBehaviour
 {
     public bool isLoop;
     private float length = 0;
-    public List<Vector3> positions;
-    public List<float> distances;
+    public List<Vector3> nodesPos;
+    public List<float> nodesDist;
+    public List<float> nodesDistFromStart;
 
     void Start()
     {
-        positions = new List<Vector3>(transform.childCount);
-        distances = new List<float>();
+        nodesPos = new List<Vector3>(transform.childCount);
+        nodesDist = new List<float>();
+        nodesDistFromStart = new List<float>();
 
         foreach (Transform child in transform)
         {
-            positions.Add(child.position);
+            nodesPos.Add(child.position);
         }
 
-        for (int i = 0; i < positions.Count - 1; i++)
+        for (int i = 0; i < nodesPos.Count - 1; i++)
         {
-            distances.Add(Vector3.Distance(positions[i], positions[i + 1]));
-            length += distances[i];
+            nodesDist.Add(Vector3.Distance(nodesPos[i], nodesPos[i + 1]));
+            length += nodesDist[i];
+
+            nodesDistFromStart.Add(Vector3.Distance(nodesPos[0], nodesPos[i + 1]));
         }
 
         if (isLoop)
         {
-            distances.Add(Vector3.Distance(positions[positions.Count - 1], positions[0]));
-            length += distances[distances.Count - 1];
-        }
+            nodesPos.Add(nodesPos[0]);
+            nodesDist.Add(Vector3.Distance(nodesPos[nodesPos.Count - 1], nodesPos[0]));
+            length += nodesDist[nodesDist.Count - 1];
 
-        Debug.Log(GetLength());
+            nodesDistFromStart.Add(Vector3.Distance(nodesPos[nodesPos.Count - 1], nodesPos[0]));
+        }
     }
 
     void Update()
@@ -44,24 +49,34 @@ public class Rail : MonoBehaviour
         return length;
     }
 
-    /*public Vector3 GetPosition(float distance)
+    public Vector3 GetPosition(float distance)
     {
+        Vector3 dir = Vector3.Normalize(nodesPos[0] + nodesPos[1]);
+        Vector3 finalDir = dir * distance;
 
-    }*/
+        return nodesPos[0] + finalDir;
+    }
 
     public void OnDrawGizmos()
     {
-        for (int i = 0; i < positions.Count - 1; i++)
+        if (nodesPos.Count <= 0)
+            return;
+
+        for (int i = 0; i < nodesPos.Count - 1; i++)
         {
-            DrawGizmos(Color.red, positions[i], positions[i + 1]);
+            DrawGizmos(Color.red, nodesPos[i], nodesPos[i + 1]);
         }
+
         if (isLoop)
-            DrawGizmos(Color.red, positions[positions.Count - 1], positions[0]);
+            DrawGizmos(Color.red, nodesPos[nodesPos.Count - 1], nodesPos[0]);
     }
     public void DrawGizmos(Color color, Vector3 startingPoint, Vector3 endPoint)
     {
         Gizmos.color = color;
+
         Gizmos.DrawSphere(startingPoint, 0.25f);
+        Gizmos.DrawSphere(endPoint, 0.25f);
+
         Gizmos.DrawLine(startingPoint, endPoint);
     }
 }

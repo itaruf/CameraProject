@@ -5,41 +5,77 @@ using UnityEngine;
 public class DollyView : Aview
 {
     public float roll, distance, fov;
-    public GameObject target;
-    public Rail rail;
     public float distanceOnRail, speed;
 
+    public GameObject target;
+    public Rail rail;
+
+    private Vector3 pos;
+
+    private Vector3 rot;
+
+    private int currentStartingNodeIndex = 0;
+    private int currentEndingNodeIndex = 0;
+    private float tolerance = 0.01f;
+
+    public int initialStartingNodeIndex = 0;
+
+    public bool isAuto;
+    
     void Start()
     {
-        
+        rot = transform.localScale;
+        pos = transform.position = rail.nodesPos[0];
+
+        Vector3 dir = Vector3.Normalize(transform.position - target.transform.position);
+
+        rot.z = Mathf.Atan2(dir.x, dir.z) * Mathf.Rad2Deg;
+        rot.y = -Mathf.Asin(dir.y) * Mathf.Rad2Deg;
+
+        transform.localScale = rot;
+
+        currentStartingNodeIndex = initialStartingNodeIndex;
+        currentEndingNodeIndex = currentStartingNodeIndex + 1;
+
+        MathUtils.GetNearestPointOnSegment(rail.nodesPos[0], rail.nodesPos[1], target.transform.position);
     }
 
     void Update()
     {
+        distanceOnRail = Input.GetAxis("Horizontal") * speed * Time.deltaTime;
 
-        /*distanceOnRail = Input.GetAxis("Horizontal") * speed * Time.deltaTime;
-        Debug.Log(distance);*/
-
-        // 3ème noeud 
-        // positions[2]
-
-        /*for (int i = 0; i < )
-            float time = Time.deltaTime * speed;
-
-        transform.position = Vector3.Lerp(transform.position, ) * time;
-        distanceOnRail = Vector3.Distance(transform.position, ) * time;
-
-        if (time > 1)
+        if (!isAuto)
         {
-            time = 0;
-            transform.position =
-        }*/
+            if (Input.GetAxis("Horizontal") >= 0)
+            {
+                pos = Vector3.MoveTowards(transform.position, rail.nodesPos[currentEndingNodeIndex], distanceOnRail);
+
+                transform.position = pos;
+
+                if (Vector3.Distance(transform.position, rail.nodesPos[currentEndingNodeIndex]) < tolerance)
+                    if (currentEndingNodeIndex == rail.nodesPos.Count - 1)
+                    {
+                        currentStartingNodeIndex = initialStartingNodeIndex;
+                        currentEndingNodeIndex = currentStartingNodeIndex + 1;
+
+                        if (!rail.isLoop)
+                            rail.nodesPos.Reverse();
+                    }
+
+                    else
+                    {
+                        currentStartingNodeIndex++;
+                        currentEndingNodeIndex++;
+                    }
+            }
+        }
     }
 
     public void OnDrawGizmos()
     {
-        //DrawGizmos(Color.black);
+        DrawGizmos(Color.black);
     }
+
     public void DrawGizmos(Color color)
     {
         Gizmos.color = color;

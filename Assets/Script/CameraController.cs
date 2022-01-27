@@ -58,8 +58,6 @@ public class CameraController : MonoBehaviour
 
     private void Update()
     {
-        Debug.Log(transform.position);
-
         /*if (time < 1) {
             time = Time.deltaTime * 0.1f;
             transform.position = transform.position + (new Vector3(targetConfig.roll, targetConfig.pitch, targetConfig.yaw) - transform.position) * time;

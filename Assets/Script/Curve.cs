@@ -28,7 +28,9 @@ public class Curve : MonoBehaviour
 
     public void OnDrawGizmos()
     {
-        DrawGizmo(Color.green, Matrix4x4.TRS(transform.position, Quaternion.Euler(transform.localScale.x, transform.localScale.y, transform.localScale.z), Vector3.one));
+        /* DrawGizmo(Color.green, Matrix4x4.TRS(transform.position, Quaternion.Euler(transform.localScale.x, transform.localScale.y, transform.localScale.z), Vector3.one));*/
+
+        //DrawGizmo(Color.green, transform.localToWorldMatrix);
     }
 
     public void DrawGizmo(Color c, Matrix4x4 localToWorldMatrix)

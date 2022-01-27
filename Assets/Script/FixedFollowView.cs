@@ -6,7 +6,7 @@ public class FixedFollowView : Aview
 {
     public float roll, fov, speed;
     public GameObject target;
-    public Vector3 pos;
+    private Vector3 rot;
 
     // Constraints
     public GameObject centralPoint;
@@ -16,15 +16,15 @@ public class FixedFollowView : Aview
 
     void Start()
     {
-        Vector3 dir = Vector3.Normalize(transform.position + target.transform.position);
-        pos = transform.position;
+        Vector3 dir = Vector3.Normalize(transform.position - target.transform.position);
+        rot = transform.localScale;
 
-        /*pos.z = Mathf.Atan2(dir.x, dir.z) * Mathf.Rad2Deg;
-        pos.y = -Mathf.Asin(dir.y) * Mathf.Rad2Deg;*/
+        /*rot.z = Mathf.Atan2(dir.x, dir.z) * Mathf.Rad2Deg;
+        rot.y = -Mathf.Asin(dir.y) * Mathf.Rad2Deg;
+        transform.localScale = rot;*/
 
         // Constraints
-
-        Vector3 dirToCentral = Vector3.Normalize(transform.position + centralPoint.transform.position);
+        Vector3 dirToCentral = Vector3.Normalize(transform.position - centralPoint.transform.position);
 
         /*yawOffsetMax = Mathf.Atan2(dirToCentral.x, dirToCentral.z) * Mathf.Rad2Deg;
         pitchOffsetMax = -Mathf.Asin(dirToCentral.y) * Mathf.Rad2Deg;*/
@@ -38,8 +38,10 @@ public class FixedFollowView : Aview
         float yawDiff = yaw - yawCentral;
         float pitchDiff = pitch - pitchCentral;
 
-        pos.z = Mathf.Clamp(yawDiff, -180, 180);
-        pos.y = Mathf.Clamp(pitchDiff, -90, 90);
+        rot.z = Mathf.Clamp(yawDiff, -180, 180);
+        rot.y = Mathf.Clamp(pitchDiff, -90, 90);
+
+        transform.localScale = rot;
 
     }
 

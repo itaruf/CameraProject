@@ -4,6 +4,19 @@ using UnityEngine;
 
 public static class MathUtils
 {
+    public static Vector3 GetNearestPointOnSegment(Vector3 A, Vector3 B, Vector3 target)
+    {
+        /*float AToTarget = Vector3.Distance(A, target);
+        float ABnorme = Vector3.Distance(A, B);
+
+        float scalar = AToTarget * ABnorme * Mathf.Cos(Vector3.Angle(A, target));
+        scalar = Mathf.Clamp(scalar, 0, ABnorme);
+
+        Debug.Log(ABnorme);*/
+        return new Vector3(0, 0, 0);
+       
+    }
+
     public static Vector3 LinearBezier(Vector3 A, Vector3 B, float t)
     {
         return (1 - t) * A + t * B;
