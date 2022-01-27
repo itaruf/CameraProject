@@ -34,4 +34,11 @@ public abstract class Aview : MonoBehaviour
         
                            
     }
+    public virtual void OnDrawGizmos()
+    {
+        CameraConfiguration cameraConfiguration = GetConfiguration();
+
+        if (cameraConfiguration != null)
+            cameraConfiguration.DrawGizmos(Color.green);
+    }
 }

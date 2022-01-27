@@ -21,6 +21,10 @@ public class DollyView : Aview
     public int initialStartingNodeIndex = 0;
 
     public bool isAuto;
+    private float[] distances;
+    private int nearestNodeIndex = 0;
+    private float min = float.MaxValue;
+    private int[] indexes;
     
     void Start()
     {
@@ -37,14 +41,47 @@ public class DollyView : Aview
         currentStartingNodeIndex = initialStartingNodeIndex;
         currentEndingNodeIndex = currentStartingNodeIndex + 1;
 
-        MathUtils.GetNearestPointOnSegment(rail.nodesPos[0], rail.nodesPos[1], target.transform.position);
+        //MathUtils.GetNearestPointOnSegment(rail.nodesPos[0], rail.nodesPos[1], target.transform.position);
+
+        distances = new float[rail.nodesPos.Count - 1];
     }
 
     void Update()
     {
         distanceOnRail = Input.GetAxis("Horizontal") * speed * Time.deltaTime;
 
-        if (!isAuto)
+        float time = Time.deltaTime * speed;
+        Vector3[] nearestPointOnSegment = new Vector3[rail.nodesPos.Count - 1];
+
+        Debug.Log(MathUtils.GetNearestPointOnSegment(rail.nodesPos[0], rail.nodesPos[1], target.transform.position));
+
+        if (isAuto)
+        {
+            /*for (int i = 0; i < rail.nodesPos.Count - 1; i++)
+            {
+                nearestPointOnSegment[i] = MathUtils.GetNearestPointOnSegment(rail.nodesPos[i], rail.nodesPos[i + 1], target.transform.position);
+                distances[i] = Vector3.Distance(rail.nodesPos[i], nearestPointOnSegment[i]);
+
+                if (min > distances[i])
+                {
+                    min = distances[i];
+                    nearestNodeIndex = i;
+                }
+            }
+
+            if (time < 1)
+            {
+                pos = Vector3.MoveTowards(transform.position, rail.nodesPos[0] * distances[0], time);
+                transform.position = pos;
+            }
+
+            else
+            {
+                transform.position = rail.nodesPos[0] * distances[0];
+            }*/
+        }
+
+        else
         {
             if (Input.GetAxis("Horizontal") >= 0)
             {
@@ -71,8 +108,9 @@ public class DollyView : Aview
         }
     }
 
-    public void OnDrawGizmos()
+    public override void OnDrawGizmos()
     {
+        base.OnDrawGizmos();
         DrawGizmos(Color.black);
     }
 
@@ -80,5 +118,8 @@ public class DollyView : Aview
     {
         Gizmos.color = color;
         Gizmos.DrawSphere(transform.position, 0.25f);
+
+        if (rail.nodesPos.Count > 0 && target != null)
+            Gizmos.DrawSphere(MathUtils.GetNearestPointOnSegment(rail.nodesPos[0], rail.nodesPos[1], target.transform.position), 0.25f);
     }
 }

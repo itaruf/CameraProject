@@ -16,7 +16,14 @@ public class FixedFollowView : Aview
 
     void Start()
     {
-        Vector3 dir = Vector3.Normalize(transform.position - target.transform.position);
+ 
+
+    }
+
+    public override CameraConfiguration GetConfiguration()
+    {
+
+        Vector3 dir = Vector3.Normalize(target.transform.position - transform.position);
         rot = transform.localScale;
 
         /*rot.z = Mathf.Atan2(dir.x, dir.z) * Mathf.Rad2Deg;
@@ -24,7 +31,7 @@ public class FixedFollowView : Aview
         transform.localScale = rot;*/
 
         // Constraints
-        Vector3 dirToCentral = Vector3.Normalize(transform.position - centralPoint.transform.position);
+        Vector3 dirToCentral = Vector3.Normalize(centralPoint.transform.position - transform.position);
 
         /*yawOffsetMax = Mathf.Atan2(dirToCentral.x, dirToCentral.z) * Mathf.Rad2Deg;
         pitchOffsetMax = -Mathf.Asin(dirToCentral.y) * Mathf.Rad2Deg;*/
@@ -38,15 +45,22 @@ public class FixedFollowView : Aview
         float yawDiff = yaw - yawCentral;
         float pitchDiff = pitch - pitchCentral;
 
-        rot.z = Mathf.Clamp(yawDiff, -180, 180);
-        rot.y = Mathf.Clamp(pitchDiff, -90, 90);
+        while (yawDiff > 180)
+            yawDiff -= 360;
 
-        transform.localScale = rot;
+        while (yawDiff < -180)
+            yawDiff += 360;
 
-    }
+        yawDiff = Mathf.Clamp(yawDiff, -yawOffsetMax, yawOffsetMax);
+        pitchDiff = Mathf.Clamp(pitchDiff, -pitchOffsetMax, pitchOffsetMax);
 
-    void Update()
-    {
-
+        CameraConfiguration config = new CameraConfiguration();
+        config.distance = 0;
+        config.pivot = transform.position;
+        config.yaw = yawDiff + yawCentral;
+        config.pitch = pitchDiff + pitchCentral;
+        config.roll = roll;
+        config.fov = fov;
+        return config;
     }
 }
