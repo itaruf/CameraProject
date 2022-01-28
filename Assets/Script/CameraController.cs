@@ -1,17 +1,28 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 public class CameraController : MonoBehaviour
 {
     public static CameraController instance;
+    public Camera camera;
 
-    public new Camera camera;
-    private List<Aview> activeViews = new List<Aview>();
-    private Vector3 targetConfig;
+    public CameraConfiguration initialCameraConfiguration;
+    public List<Aview> activeViews = new List<Aview>();
+
     public float speed;
-    public float time;
+
+    // 2  - Fixed View et Moyenne
+    public CameraConfiguration averageCameraConfiguration;
+
+    // 3 - Smoothing
+    public CameraConfiguration currentCameraConfiguration;
+    public CameraConfiguration targetCameraConfiguration;
+
+    // 4 – Fixed Position Follow
+    public FixedFollowView fixedFollowView;
 
     private void Awake()
     {
@@ -21,96 +32,50 @@ public class CameraController : MonoBehaviour
             DontDestroyOnLoad(gameObject);
         }
         else
-        {
             Destroy(gameObject);
-        }
     }
 
     private void Start()
     {
-        FixedView fixedView = GetComponent<FixedView>();
-
-        CameraConfiguration config = new CameraConfiguration
+        // Starting Config
+        currentCameraConfiguration = new CameraConfiguration
         {
-            yaw = fixedView.yaw,
-            pitch = fixedView.pitch,
-            roll = fixedView.roll,
-            fov = fixedView.fov,
+            yaw = initialCameraConfiguration.yaw,
+            pitch = initialCameraConfiguration.pitch,
+            roll = initialCameraConfiguration.roll,
+            fov = initialCameraConfiguration.fov,
+            pivot = initialCameraConfiguration.pivot,
+            distance = initialCameraConfiguration.distance
         };
 
-        // Fixing position
-        transform.position = new Vector3(config.roll, config.pitch, config.yaw);
-        camera.fieldOfView = config.fov;
-
-        time = 0;
-
-        // Target
-        targetConfig.z = ComputeAverageYaw();
-        targetConfig.y = ComputeAveragePitch();
-        targetConfig.x = ComputeAverageYaw();
+        ApplyConfiguration(camera, currentCameraConfiguration);
     }
 
     private void Update()
     {
-        /*if (time < 1) {
-            time = Time.deltaTime * 0.1f;
-            transform.position = transform.position + (new Vector3(targetConfig.roll, targetConfig.pitch, targetConfig.yaw) - transform.position) * time;
-        }
-        else
-            transform.position = new Vector3(targetConfig.roll, targetConfig.pitch, targetConfig.yaw);*/
-
-        Vector3 pos = transform.position;
-
-        // 3 
-
-        /*if (time < 1)
+        // Test : 2 – Fixed View et Moyenne : Interpolation Config Moyenne
+        averageCameraConfiguration = new CameraConfiguration
         {
-            time = Time.deltaTime * 0.1f;
-            //pos.z = transform.position.z + (targetConfig.yaw - transform.position.z) * time;
-            pos.z = new Vector2(Mathf.Cos(transform.position.z + Mathf.Deg2Rad), Mathf.Sin(transform.position.z * Mathf.Deg2Rad)).y 
-                + 
-                (new Vector2(Mathf.Cos(targetConfig.yaw * Mathf.Deg2Rad), Mathf.Sin(targetConfig.yaw * Mathf.Deg2Rad)).y - new Vector2(Mathf.Cos(transform.position.z + Mathf.Deg2Rad), Mathf.Sin(transform.position.z * Mathf.Deg2Rad)).y) * time;
-            pos.y = transform.position.y + (targetConfig.pitch - transform.position.y) * time;
-            pos.x = transform.position.x + (targetConfig.roll - transform.position.x) * time;
-        }
-        else
-            pos = new Vector3(targetConfig.roll, targetConfig.pitch, targetConfig.yaw);*/
-
-
-        // 4
-
-        /*float time = Time.deltaTime * speed;
-
-        foreach (Aview activeView in activeViews)
-        {
-            FixedFollowView tmp = (FixedFollowView) activeView;
-
-            if (tmp)
-            {
-                Debug.Log("in");
-
-                if (time < 1)
-                    tmp.pos = Vector3.Lerp(tmp.pos, tmp.target.transform.position, time);
-                else
-                    tmp.pos = tmp.target.transform.position;
-            }
-            break;
-        }*/
-
-        // 5
-
-
+            roll = ComputeAverageRoll(),
+            pitch = ComputeAveragePitch(),
+            yaw = ComputeAverageYaw(),
+            pivot = ComputeAveragePivot(),
+            distance = ComputeAverageDistance(),
+            fov = ComputeAverageFov(),
+        };
     }
 
     public float ComputeAverageYaw()
     {
         Vector2 sum = Vector2.zero;
+
         foreach (Aview view in activeViews)
         {
             CameraConfiguration config = view.GetConfiguration();
             sum += new Vector2(Mathf.Cos(config.yaw * Mathf.Deg2Rad),
                 Mathf.Sin(config.yaw * Mathf.Deg2Rad)) * view.weight;
         }
+
         return Vector2.SignedAngle(Vector2.right, sum);
     }
 
@@ -118,6 +83,7 @@ public class CameraController : MonoBehaviour
     {
         float sum = 0;
         float weights = 0;
+
         foreach (Aview view in activeViews)
         {
             CameraConfiguration config = view.GetConfiguration();
@@ -125,13 +91,17 @@ public class CameraController : MonoBehaviour
             sum += config.roll * view.weight;
                
         }
-        return sum/weights;
+        if (weights == 0)
+            return sum;
+
+        return sum / weights;
     }
 
     public float ComputeAveragePitch()
     {
         float sum = 0;
         float weights = 0;
+
         foreach (Aview view in activeViews)
         {
             CameraConfiguration config = view.GetConfiguration();
@@ -139,27 +109,81 @@ public class CameraController : MonoBehaviour
             sum += config.pitch * view.weight;
 
         }
+
+        if (weights == 0)
+            return sum;
+
         return sum / weights;
     }
 
-    public void addView(Aview view) 
+    public float ComputeAverageDistance()
     {
-        activeViews.Add(view);
-    
+        float sum = 0;
+        float weights = 0;
+
+        foreach (Aview view in activeViews)
+        {
+            CameraConfiguration config = view.GetConfiguration();
+            weights += view.weight;
+            sum += config.distance * view.weight;
+        }
+
+        if (weights == 0)
+            return sum;
+
+        return sum / weights;
     }
 
-    public void removeView(Aview aview) 
+    public float ComputeAverageFov()
+    {
+        float sum = 0;
+        float weights = 0;
+
+        foreach (Aview view in activeViews)
+        {
+            CameraConfiguration config = view.GetConfiguration();
+            weights += view.weight;
+            sum += config.fov * view.weight;
+        }
+
+        if (weights == 0)
+            return sum;
+
+        return sum / weights;
+    }
+
+    public Vector3 ComputeAveragePivot()
+    {
+        List<Vector3> pos = new List<Vector3>();
+
+        foreach (Aview view in activeViews) 
+        {
+            CameraConfiguration config = view.GetConfiguration();
+            pos.Add(config.GetPosition());
+        }
+
+        return new Vector3(pos.Average(x => x.x), pos.Average(x => x.y), pos.Average(x => x.z));
+    }
+
+    public void AddView(Aview view) 
+    {
+        activeViews.Add(view);
+    }
+
+    public void RemoveView(Aview aview) 
     {
         activeViews.Remove(aview);
     }
 
-    
-
-
     public void ApplyConfiguration(Camera camera, CameraConfiguration configuration) 
     {
-    
-    
+        camera.transform.position = configuration.GetPosition();
+        camera.transform.rotation = configuration.GetRotation();
+        camera.fieldOfView = configuration.fov;
     }
 
+    public void OnDrawGizmos()
+    {
+        currentCameraConfiguration.DrawGizmos(Color.red);
+    }
 }

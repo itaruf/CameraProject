@@ -12,26 +12,15 @@ public abstract class Aview : MonoBehaviour
     private void Start()
     {
         if (isActiveOnStart)
-        {
             SetActive(isActiveOnStart);
-        }
-        
     }
 
     public void SetActive(bool isActive) 
     {
         if (isActive) 
-        {
-            CameraController.instance.addView(this);
-        }
-
-
+            CameraController.instance.AddView(this);
         else
-        {
-            CameraController.instance.removeView(this);
-        }
-        
-        
+            CameraController.instance.RemoveView(this);
                            
     }
     public virtual void OnDrawGizmos()

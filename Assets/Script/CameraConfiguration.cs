@@ -14,13 +14,12 @@ using UnityEngine;
 
     public Quaternion GetRotation() 
     {
-
         return Quaternion.Euler(pitch, yaw, roll);
     }
 
     public Vector3 GetPosition() 
     {
-        Vector3 offset = GetRotation() *(Vector3.back * distance);
+        Vector3 offset = GetRotation() * (Vector3.back * distance);
 
         return pivot + offset;
     }

@@ -18,7 +18,7 @@ public class FixedView : Aview
         config.pitch = pitch;
         config.roll = roll;
         config.fov = fov;
-        return  config;
+        return config;
        
     }
 }
