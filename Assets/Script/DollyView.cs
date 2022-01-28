@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using System;
 
 public class DollyView : Aview
 {
@@ -10,84 +11,83 @@ public class DollyView : Aview
     public GameObject target;
     public Rail rail;
 
-    private Vector3 pos;
+    private readonly float tolerance = 0.1f;
 
-    private Vector3 rot;
-
-    private int currentStartingNodeIndex = 0;
-    private int currentEndingNodeIndex = 0;
-    private float tolerance = 0.01f;
-
-    public int initialStartingNodeIndex = 0;
+    public int initialStartIndex = 0;
 
     public bool isAuto;
     private float[] distances;
     private int nearestNodeIndex = 0;
     private float min = float.MaxValue;
-    private int[] indexes;
-    
+    private Vector3[] nearestPointsOnSegment;
+
+    public List<KeyValuePair<Vector3, Vector3>> segments;
+
+    private int currentStartingNodeIndex = 0;
+    private int currentEndingNodeIndex = 0;
+    public int initialStartingNodeIndex = 0;
+
+    public int currentSegmentIndex = 0;
+    public int segmentIndex = 0;
+
     void Start()
     {
-        rot = transform.localScale;
-        pos = transform.position = rail.nodesPos[0];
+        transform.position = new Vector3(rail.nodesPos[0].x, transform.position.y, transform.position.z);
+        distances = new float[rail.nodesPos.Count - 1];
+        segments = new List<KeyValuePair<Vector3, Vector3>>();
+        nearestPointsOnSegment = new Vector3[rail.nodesPos.Count - 1];
 
-        Vector3 dir = Vector3.Normalize(transform.position - target.transform.position);
+        for (int i = 0; i < rail.nodesPos.Count - 1; i++)
+            segments.Add(new KeyValuePair<Vector3, Vector3>(rail.nodesPos[i], rail.nodesPos[i + 1]));
 
-        rot.z = Mathf.Atan2(dir.x, dir.z) * Mathf.Rad2Deg;
-        rot.y = -Mathf.Asin(dir.y) * Mathf.Rad2Deg;
+        int a = 0;
+        for (int i = 0; i < rail.nodesPos.Count - 1; i++)
+        {
+            nearestPointsOnSegment[i] = MathUtils.GetNearestPointOnSegment(rail.nodesPos[i], rail.nodesPos[i + 1], target.transform.position);
+            distances[i] = Vector3.Distance(nearestPointsOnSegment[i], target.transform.position);
 
-        transform.localScale = rot;
+            if (min > distances[i])
+                a = i;
+        }
 
-        currentStartingNodeIndex = initialStartingNodeIndex;
+        transform.position = nearestPointsOnSegment[a];
+        currentStartingNodeIndex = a;
         currentEndingNodeIndex = currentStartingNodeIndex + 1;
 
-        //MathUtils.GetNearestPointOnSegment(rail.nodesPos[0], rail.nodesPos[1], target.transform.position);
-
-        distances = new float[rail.nodesPos.Count - 1];
+        Array.Clear(nearestPointsOnSegment, 0, nearestPointsOnSegment.Length);
+        Array.Clear(distances, 0, distances.Length);
     }
 
+    public override CameraConfiguration GetConfiguration()
+    {
+        Vector3 dir = Vector3.Normalize(target.transform.position - transform.position);
+
+        float yaw = Mathf.Atan2(dir.x, dir.z) * Mathf.Rad2Deg;
+        float pitch = -Mathf.Asin(dir.y) * Mathf.Rad2Deg;
+
+        CameraConfiguration config = new CameraConfiguration
+        {
+            distance = 0,
+            pivot = transform.position,
+            yaw = yaw,
+            pitch = pitch,
+            roll = roll,
+            fov = fov
+        };
+
+        return config;
+    }
     void Update()
     {
         distanceOnRail = Input.GetAxis("Horizontal") * speed * Time.deltaTime;
 
         float time = Time.deltaTime * speed;
-        Vector3[] nearestPointOnSegment = new Vector3[rail.nodesPos.Count - 1];
 
-        Debug.Log(MathUtils.GetNearestPointOnSegment(rail.nodesPos[0], rail.nodesPos[1], target.transform.position));
-
-        if (isAuto)
-        {
-            /*for (int i = 0; i < rail.nodesPos.Count - 1; i++)
-            {
-                nearestPointOnSegment[i] = MathUtils.GetNearestPointOnSegment(rail.nodesPos[i], rail.nodesPos[i + 1], target.transform.position);
-                distances[i] = Vector3.Distance(rail.nodesPos[i], nearestPointOnSegment[i]);
-
-                if (min > distances[i])
-                {
-                    min = distances[i];
-                    nearestNodeIndex = i;
-                }
-            }
-
-            if (time < 1)
-            {
-                pos = Vector3.MoveTowards(transform.position, rail.nodesPos[0] * distances[0], time);
-                transform.position = pos;
-            }
-
-            else
-            {
-                transform.position = rail.nodesPos[0] * distances[0];
-            }*/
-        }
-
-        else
+        if (!isAuto)
         {
             if (Input.GetAxis("Horizontal") >= 0)
             {
-                pos = Vector3.MoveTowards(transform.position, rail.nodesPos[currentEndingNodeIndex], distanceOnRail);
-
-                transform.position = pos;
+                transform.position = Vector3.MoveTowards(transform.position, rail.nodesPos[currentEndingNodeIndex], distanceOnRail);
 
                 if (Vector3.Distance(transform.position, rail.nodesPos[currentEndingNodeIndex]) < tolerance)
                     if (currentEndingNodeIndex == rail.nodesPos.Count - 1)
@@ -106,6 +106,49 @@ public class DollyView : Aview
                     }
             }
         }
+
+        if (isAuto)
+        {
+            for (int i = 0; i < rail.nodesPos.Count - 1; i++)
+            {
+                nearestPointsOnSegment[i] = MathUtils.GetNearestPointOnSegment(rail.nodesPos[i], rail.nodesPos[i + 1], target.transform.position);
+                distances[i] = Vector3.Distance(nearestPointsOnSegment[i], target.transform.position);
+
+                if (min > distances[i])
+                {
+                    min = distances[i];
+                    nearestNodeIndex = i;
+                    segmentIndex = i;
+                    currentSegmentIndex = i;
+                }
+            }
+
+            /*Debug.Log("nearestNodeIndex:" + nearestNodeIndex);
+            Debug.Log("currentSegmentIndex:" + currentSegmentIndex);
+            Debug.Log("segmentIndex:" + segmentIndex);*/
+
+            /* if (currentSegmentIndex < segmentIndex)
+             {
+                 Debug.Log("Switch Segment");
+                 transform.position = Vector3.MoveTowards(transform.position, segments[currentSegmentIndex + 1].Key, time);
+
+                 if (Vector3.Distance(transform.position, nearestPointsOnSegment[segmentIndex]) < tolerance)
+                 {
+                     Debug.Log("B");
+                     currentSegmentIndex = segmentIndex;
+                 }
+             }
+
+             else
+             {*/
+            Debug.Log("On Segment");
+            transform.position = nearestPointsOnSegment[nearestNodeIndex];
+            /* }*/
+
+            // clear
+            min = float.MaxValue;
+            Array.Clear(distances, 0, distances.Length);
+        }
     }
 
     public override void OnDrawGizmos()
@@ -117,9 +160,13 @@ public class DollyView : Aview
     public void DrawGizmos(Color color)
     {
         Gizmos.color = color;
-        Gizmos.DrawSphere(transform.position, 0.25f);
+        Gizmos.DrawSphere(transform.position, 0.30f);
 
-        if (rail.nodesPos.Count > 0 && target != null)
-            Gizmos.DrawSphere(MathUtils.GetNearestPointOnSegment(rail.nodesPos[0], rail.nodesPos[1], target.transform.position), 0.25f);
+        if (nearestPointsOnSegment != null && nearestPointsOnSegment.Length > 0)
+        {
+            Gizmos.color = Color.yellow;
+            for (int i = 0; i < nearestPointsOnSegment.Length; i++)
+                Gizmos.DrawSphere(nearestPointsOnSegment[i], 0.25f);
+        }
     }
 }

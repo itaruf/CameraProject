@@ -9,18 +9,11 @@ public static class MathUtils
         Vector3 AToTarget = target - A;
         Vector3 n = (B - A).normalized;
 
-        Debug.Log(n);
         float scalar = Vector3.Dot(AToTarget, n);
-
-        /*float scalar = AToTarget * n * Vector3.Dot(A + target, A + B) / (AToTarget + n);*/
-
-        Debug.Log(scalar);
-
         scalar = Mathf.Clamp(scalar, 0, Vector3.Distance(A, B));
 
         Vector3 projC = A + n * scalar;
 
-        Debug.Log(projC);
         return projC;
     }
 

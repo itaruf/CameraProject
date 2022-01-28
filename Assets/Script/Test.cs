@@ -18,6 +18,6 @@ public class Test : MonoBehaviour
 
     private void OnDrawGizmos()
     {
-        curve.DrawGizmo(Color.green, transform.localToWorldMatrix);
+        //curve.DrawGizmo(Color.green, transform.localToWorldMatrix);
     }
 }

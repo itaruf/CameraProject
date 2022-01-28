@@ -16,7 +16,7 @@ public class FixedFollowView : Aview
 
     void Start()
     {
- 
+
 
     }
 
@@ -24,7 +24,6 @@ public class FixedFollowView : Aview
     {
 
         Vector3 dir = Vector3.Normalize(target.transform.position - transform.position);
-        rot = transform.localScale;
 
         /*rot.z = Mathf.Atan2(dir.x, dir.z) * Mathf.Rad2Deg;
         rot.y = -Mathf.Asin(dir.y) * Mathf.Rad2Deg;
@@ -54,13 +53,16 @@ public class FixedFollowView : Aview
         yawDiff = Mathf.Clamp(yawDiff, -yawOffsetMax, yawOffsetMax);
         pitchDiff = Mathf.Clamp(pitchDiff, -pitchOffsetMax, pitchOffsetMax);
 
-        CameraConfiguration config = new CameraConfiguration();
-        config.distance = 0;
-        config.pivot = transform.position;
-        config.yaw = yawDiff + yawCentral;
-        config.pitch = pitchDiff + pitchCentral;
-        config.roll = roll;
-        config.fov = fov;
+        CameraConfiguration config = new CameraConfiguration
+        {
+            distance = 0,
+            pivot = transform.position,
+            yaw = yawDiff + yawCentral,
+            pitch = pitchDiff + pitchCentral,
+            roll = roll,
+            fov = fov,
+        };
+
         return config;
     }
 }

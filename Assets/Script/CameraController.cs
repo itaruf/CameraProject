@@ -7,12 +7,8 @@ public class CameraController : MonoBehaviour
 {
     public static CameraController instance;
 
-    public Camera camera;
-    private Vector3 pos2;
-
+    public new Camera camera;
     private List<Aview> activeViews = new List<Aview>();
-
-    private FixedView currentConfig;
     private Vector3 targetConfig;
     public float speed;
     public float time;
@@ -33,18 +29,18 @@ public class CameraController : MonoBehaviour
     private void Start()
     {
         FixedView fixedView = GetComponent<FixedView>();
-        currentConfig = new FixedView();
+
+        CameraConfiguration config = new CameraConfiguration
+        {
+            yaw = fixedView.yaw,
+            pitch = fixedView.pitch,
+            roll = fixedView.roll,
+            fov = fixedView.fov,
+        };
 
         // Fixing position
-        transform.position = new Vector3(fixedView.roll, fixedView.pitch, fixedView.yaw);
-        camera.fieldOfView = fixedView.fov;
-
-        // Current Fixed View
-        currentConfig.weight = fixedView.weight;
-        currentConfig.yaw = fixedView.yaw;
-        currentConfig.pitch = fixedView.pitch;
-        currentConfig.roll = fixedView.roll;
-        currentConfig.fov = fixedView.fov;
+        transform.position = new Vector3(config.roll, config.pitch, config.yaw);
+        camera.fieldOfView = config.fov;
 
         time = 0;
 
@@ -52,8 +48,6 @@ public class CameraController : MonoBehaviour
         targetConfig.z = ComputeAverageYaw();
         targetConfig.y = ComputeAveragePitch();
         targetConfig.x = ComputeAverageYaw();
-
-
     }
 
     private void Update()
