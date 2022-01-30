@@ -9,6 +9,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 3791765848564492020}
+  - component: {fileID: 6954318446156792676}
   m_Layer: 0
   m_Name: SphereViewVolume
   m_TagString: Untagged
@@ -30,3 +31,21 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &6954318446156792676
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1823907621064016224}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 586705840bfdf634b85bfaa65b4ae21a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  priority: 0
+  aview: {fileID: 0}
+  isCutOnSwitch: 0
+  target: {fileID: 0}
+  outerRadius: 0
+  innerRadius: 0

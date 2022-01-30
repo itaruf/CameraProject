@@ -7,6 +7,12 @@ public class Test : MonoBehaviour
 {
     public Curve curve;
 
+    // 4 – Fixed Position Follow
+    public FixedFollowView fixedFollowView;
+
+    // 5/6 - Dolly camera automatique
+    public DollyView dollyView;
+
     void Start()
     {
         // Test : 2 – Fixed View et Moyenne
@@ -42,7 +48,7 @@ public class Test : MonoBehaviour
 
         // Test : 2 – Fixed View et Moyenne : Interpolation Config Moyenne
         CameraConfiguration averageCameraConfiguration = CameraController.instance.averageCameraConfiguration;
-        CameraConfiguration currentCameraConfig = CameraController.instance.currentCameraConfiguration;
+        CameraConfiguration currentCameraConfig = CameraController.instance.currentCameraConfig;
 
         if (time < 1)
         {
@@ -75,7 +81,7 @@ public class Test : MonoBehaviour
         float time = Time.deltaTime * CameraController.instance.speed;
 
         // Test : 3 – Smoothing
-        CameraConfiguration currentCameraConfig = CameraController.instance.currentCameraConfiguration;
+        CameraConfiguration currentCameraConfig = CameraController.instance.currentCameraConfig;
         CameraConfiguration targetCameraConfig = CameraController.instance.averageCameraConfiguration;
 
         if (time < 1)
@@ -102,14 +108,11 @@ public class Test : MonoBehaviour
 
     private void TestFixedCamera()
     {
-
-        FixedFollowView fixedFollow = CameraController.instance.fixedFollowView;
-
-        float time = Time.deltaTime * fixedFollow.speed;
+        float time = Time.deltaTime * fixedFollowView.speed;
 
         // Test : 4 – Fixed View et Moyenne : Interpolation Config Moyenne
-        CameraConfiguration fixedFollowConfig = fixedFollow.GetConfiguration();
-        CameraConfiguration currentCameraConfig = CameraController.instance.currentCameraConfiguration;
+        CameraConfiguration fixedFollowConfig = fixedFollowView.GetConfiguration();
+        CameraConfiguration currentCameraConfig = CameraController.instance.currentCameraConfig;
 
         if (time < 1)
         {
@@ -139,13 +142,11 @@ public class Test : MonoBehaviour
 
     private void TestDollyCamera()
     {
-        DollyView dollyView = CameraController.instance.dollyView;
-
         dollyView.distanceOnRail = Input.GetAxis("Horizontal") * dollyView.speed * Time.deltaTime;
         float time = Time.deltaTime * dollyView.speed;
 
         CameraConfiguration dollyViewConfig = dollyView.GetConfiguration();
-        CameraConfiguration currentCameraConfig = CameraController.instance.currentCameraConfiguration;
+        CameraConfiguration currentCameraConfig = CameraController.instance.currentCameraConfig;
 
 
         if (!dollyView.isAuto)

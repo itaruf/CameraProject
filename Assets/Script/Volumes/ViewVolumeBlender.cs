@@ -49,6 +49,9 @@ public class ViewVolumeBlender : MonoBehaviour
     {
         activeViewVolumes.Add(aViewVolume);
 
+        if (volumesPerViews == null)
+            return;
+
         if (!volumesPerViews.ContainsKey(aViewVolume.aview))
         {
             volumesPerViews.Add(aViewVolume.aview, new List<AViewVolume>());

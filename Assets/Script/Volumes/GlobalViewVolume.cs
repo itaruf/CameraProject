@@ -11,6 +11,5 @@ public class GlobalViewVolume : AViewVolume
 
     void Update()
     {
-        
     }
 }

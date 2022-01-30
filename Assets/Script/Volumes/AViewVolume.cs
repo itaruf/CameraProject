@@ -18,6 +18,7 @@ public abstract class AViewVolume : MonoBehaviour
     {
         if (isCutOnSwitch)
         {
+            Debug.Log("Cut");
             ViewVolumeBlender.instance.Update();
             CameraController.instance.Cut();
         }

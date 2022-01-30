@@ -6,6 +6,7 @@ public class TriggeredViewVolume : AViewVolume
 {
     private Collider collider;
     public GameObject target;
+    public Color color;
     void Start()
     {
         collider = GetComponent<BoxCollider>();
@@ -17,14 +18,14 @@ public class TriggeredViewVolume : AViewVolume
 
     private void OnTriggerEnter(Collider other)
     {
-        Debug.Log("in");
         if (other.gameObject == target)
+        {
             SetActive(true);
+        }
     }
 
     private void OnTriggerExit(Collider other)
     {
-        Debug.Log("out");
         if (other.gameObject == target)
         {
             SetActive(false);
@@ -37,5 +38,16 @@ public class TriggeredViewVolume : AViewVolume
         {
             GUILayout.Label(viewVolume.name);
         }
+    }
+
+    public void OnDrawGizmos()
+    {
+        DrawGizmos();
+    }
+
+    public void DrawGizmos()
+    {
+        Gizmos.color = this.color;
+        Gizmos.DrawCube(transform.position, transform.localScale);
     }
 }

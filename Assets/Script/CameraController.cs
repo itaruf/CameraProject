@@ -9,7 +9,7 @@ public class CameraController : MonoBehaviour
     public static CameraController instance;
     public Camera camera;
 
-    public CameraConfiguration initialCameraConfiguration;
+    public CameraConfiguration initialCameraConfig;
     public List<Aview> activeViews = new List<Aview>();
 
     public float speed;
@@ -18,14 +18,8 @@ public class CameraController : MonoBehaviour
     public CameraConfiguration averageCameraConfiguration;
 
     // 3 - Smoothing
-    public CameraConfiguration currentCameraConfiguration;
+    public CameraConfiguration currentCameraConfig;
     public CameraConfiguration targetCameraConfiguration;
-
-    // 4 – Fixed Position Follow
-    public FixedFollowView fixedFollowView;
-
-    // 5/6 - Dolly camera automatique
-    public DollyView dollyView;
 
     // 4 – Cut
     private bool isCutRequested = false;
@@ -44,21 +38,26 @@ public class CameraController : MonoBehaviour
     private void Start()
     {
         // Starting Config
-        currentCameraConfiguration = new CameraConfiguration
+        initialCameraConfig = new CameraConfiguration
         {
-            yaw = initialCameraConfiguration.yaw,
-            pitch = initialCameraConfiguration.pitch,
-            roll = initialCameraConfiguration.roll,
-            fov = initialCameraConfiguration.fov,
-            pivot = initialCameraConfiguration.pivot,
-            distance = initialCameraConfiguration.distance
+            yaw = transform.rotation.eulerAngles.y,
+            pitch = transform.rotation.eulerAngles.x,
+            roll = transform.rotation.eulerAngles.z,
+            fov = camera.fieldOfView,
+            pivot = transform.position,
+            distance = 0,
         };
 
-        ApplyConfiguration(camera, currentCameraConfiguration);
+        camera.transform.position = initialCameraConfig.GetPosition();
+        camera.transform.rotation = transform.rotation = initialCameraConfig.GetRotation();
+        camera.fieldOfView = initialCameraConfig.fov;
+
+        currentCameraConfig = initialCameraConfig;
     }
 
     private void Update()
     {
+
         // Test : 2 – Fixed View et Moyenne : Interpolation Config Moyenne
         averageCameraConfiguration = new CameraConfiguration
         {
@@ -70,15 +69,31 @@ public class CameraController : MonoBehaviour
             fov = ComputeAverageFov(),
         };
 
-        if (isCutRequested)
-        {
-            isCutRequested = false;
-            ApplyConfiguration(camera, targetCameraConfiguration);
-        }
+        Debug.Log(activeViews.Count);
+
+        foreach (AViewVolume aviewVolume in ViewVolumeBlender.instance.activeViewVolumes)
+            if (aviewVolume.isCutOnSwitch)
+                Cut();
+
+        ApplyConfiguration(camera, averageCameraConfiguration);
     }
+
     public void Cut()
     {
+        //isCutRequested = false;
 
+        Quaternion tmp = averageCameraConfiguration.GetRotation();
+
+        currentCameraConfig.roll = tmp.eulerAngles.z;
+        currentCameraConfig.pitch = tmp.eulerAngles.x;
+        currentCameraConfig.yaw = tmp.eulerAngles.y;
+        currentCameraConfig.pivot = averageCameraConfiguration.GetPosition();
+        currentCameraConfig.fov = averageCameraConfiguration.fov;
+        currentCameraConfig.distance = averageCameraConfiguration.distance;
+
+        camera.transform.position = currentCameraConfig.GetPosition();
+        camera.transform.rotation = currentCameraConfig.GetRotation();
+        camera.fieldOfView = currentCameraConfig.fov;
     }
 
     public float ComputeAverageYaw()
@@ -107,6 +122,7 @@ public class CameraController : MonoBehaviour
             sum += config.roll * view.weight;
                
         }
+
         if (weights == 0)
             return sum;
 
@@ -171,14 +187,16 @@ public class CameraController : MonoBehaviour
     public Vector3 ComputeAveragePivot()
     {
         List<Vector3> pos = new List<Vector3>();
-
         foreach (Aview view in activeViews) 
         {
             CameraConfiguration config = view.GetConfiguration();
             pos.Add(config.GetPosition());
         }
 
-        return new Vector3(pos.Average(x => x.x), pos.Average(x => x.y), pos.Average(x => x.z));
+        if (pos.Count == 0)
+            return Vector3.zero;
+
+       return new Vector3(pos.Average(x => x.x), pos.Average(x => x.y), pos.Average(x => x.z));
     }
 
     public void AddView(Aview view) 
@@ -193,13 +211,47 @@ public class CameraController : MonoBehaviour
 
     public void ApplyConfiguration(Camera camera, CameraConfiguration configuration) 
     {
-        camera.transform.position = configuration.GetPosition();
+        float time = Time.deltaTime * speed;
+
+        if (time < 1)
+        {
+            Quaternion tmp = Quaternion.Lerp(currentCameraConfig.GetRotation(), configuration.GetRotation(), time);
+
+            currentCameraConfig.roll = tmp.eulerAngles.z;
+            currentCameraConfig.pitch = tmp.eulerAngles.x;
+            currentCameraConfig.yaw = tmp.eulerAngles.y;
+            currentCameraConfig.pivot = Vector3.Lerp(currentCameraConfig.GetPosition(), configuration.GetPosition(), time);
+            currentCameraConfig.fov = Mathf.Lerp(currentCameraConfig.fov, configuration.fov, time);
+            currentCameraConfig.distance = Mathf.Lerp(currentCameraConfig.distance, configuration.distance, time);
+
+            camera.transform.position = currentCameraConfig.GetPosition();
+            camera.transform.rotation = currentCameraConfig.GetRotation();
+            camera.fieldOfView = currentCameraConfig.fov;
+
+        }
+        else
+        {
+            Quaternion tmp = configuration.GetRotation();
+
+            currentCameraConfig.roll = tmp.eulerAngles.z;
+            currentCameraConfig.pitch = tmp.eulerAngles.x;
+            currentCameraConfig.yaw = tmp.eulerAngles.y;
+            currentCameraConfig.pivot = configuration.GetPosition();
+            currentCameraConfig.fov = configuration.fov;
+            currentCameraConfig.distance = configuration.distance;
+
+            camera.transform.position = currentCameraConfig.GetPosition();
+            camera.transform.rotation = currentCameraConfig.GetRotation();
+            camera.fieldOfView = currentCameraConfig.fov;
+        }
+
+        /*camera.transform.position = configuration.GetPosition();
         camera.transform.rotation = configuration.GetRotation();
-        camera.fieldOfView = configuration.fov;
+        camera.fieldOfView = configuration.fov;*/
     }
 
     public void OnDrawGizmos()
     {
-        currentCameraConfiguration.DrawGizmos(Color.red);
+        currentCameraConfig.DrawGizmos(Color.red);
     }
 }

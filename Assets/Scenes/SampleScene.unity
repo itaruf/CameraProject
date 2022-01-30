@@ -692,9 +692,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   priority: 0
   aview: {fileID: 953315515}
+  isCutOnSwitch: 0
   target: {fileID: 1268088674}
   outerRadius: 1.03
-  innerRadius: 1.22
+  innerRadius: 0.58
 --- !u!114 &953315515 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 1949303357520339976, guid: 052376635d3385a4ab2e1a42e052799a, type: 3}
