@@ -7,6 +7,8 @@ public abstract class AViewVolume : MonoBehaviour
     public int priority = 0;
     public Aview aview;
     protected bool IsActive { get; private set; }
+
+    public bool isCutOnSwitch;
     public virtual float ComputeSelfWeight()
     {
         return 1.0f;
@@ -14,6 +16,12 @@ public abstract class AViewVolume : MonoBehaviour
 
     protected void SetActive(bool isActive)
     {
+        if (isCutOnSwitch)
+        {
+            ViewVolumeBlender.instance.Update();
+            CameraController.instance.Cut();
+        }
+
         if (isActive)
             ViewVolumeBlender.instance.AddVolume(this);
         else

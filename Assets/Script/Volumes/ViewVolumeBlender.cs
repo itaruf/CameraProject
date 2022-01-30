@@ -8,6 +8,7 @@ public class ViewVolumeBlender : MonoBehaviour
     public Dictionary<Aview, List<AViewVolume>> volumesPerViews;
 
     public static ViewVolumeBlender instance;
+    private int max = int.MinValue;
 
     private void Awake()
     {
@@ -24,9 +25,24 @@ public class ViewVolumeBlender : MonoBehaviour
         activeViewVolumes = new List<AViewVolume>();
         volumesPerViews = new Dictionary<Aview, List<AViewVolume>>();
     }
-    void Update()
+    public void Update()
     {
-        
+        foreach (AViewVolume aViewVolume in activeViewVolumes)
+        {
+            aViewVolume.aview.weight = 0;
+
+            if (max < aViewVolume.priority)
+                max = aViewVolume.priority;
+        }
+
+        foreach (AViewVolume aViewVolume in activeViewVolumes)
+        {
+            if (aViewVolume.priority < max)
+                aViewVolume.aview.weight = 0;
+
+            else
+                aViewVolume.aview.weight = Mathf.Max(aViewVolume.aview.weight, aViewVolume.ComputeSelfWeight());
+        }
     }
 
     public void AddVolume(AViewVolume aViewVolume)
@@ -38,6 +54,7 @@ public class ViewVolumeBlender : MonoBehaviour
             volumesPerViews.Add(aViewVolume.aview, new List<AViewVolume>());
             aViewVolume.aview.SetActive(true);
         }
+
         volumesPerViews[aViewVolume.aview].Add(aViewVolume);
     }
 

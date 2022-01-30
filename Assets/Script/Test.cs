@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -26,7 +27,8 @@ public class Test : MonoBehaviour
     {
         //TestFixedView();
         //TestSmoothing();
-        TestFixedCamera();
+        //TestFixedCamera();
+        //TestDollyCamera();
     }
 
     private void OnDrawGizmos()
@@ -133,5 +135,110 @@ public class Test : MonoBehaviour
         }
 
         CameraController.instance.ApplyConfiguration(CameraController.instance.camera, currentCameraConfig);
+    }
+
+    private void TestDollyCamera()
+    {
+        DollyView dollyView = CameraController.instance.dollyView;
+
+        dollyView.distanceOnRail = Input.GetAxis("Horizontal") * dollyView.speed * Time.deltaTime;
+        float time = Time.deltaTime * dollyView.speed;
+
+        CameraConfiguration dollyViewConfig = dollyView.GetConfiguration();
+        CameraConfiguration currentCameraConfig = CameraController.instance.currentCameraConfiguration;
+
+
+        if (!dollyView.isAuto)
+        {
+            if (Input.GetAxis("Horizontal") >= 0)
+            {
+                if (time < 1)
+                {
+                    Quaternion tmp = Quaternion.Lerp(currentCameraConfig.GetRotation(), dollyViewConfig.GetRotation(), time);
+
+                    currentCameraConfig.roll = tmp.eulerAngles.z;
+                    currentCameraConfig.pitch = tmp.eulerAngles.x;
+                    currentCameraConfig.yaw = tmp.eulerAngles.y;
+                    currentCameraConfig.pivot = Vector3.Lerp(currentCameraConfig.pivot, dollyView.rail.nodesPos[dollyView.currentEndingNodeIndex], dollyView.distanceOnRail);
+                    currentCameraConfig.fov = Mathf.Lerp(currentCameraConfig.fov, dollyViewConfig.fov, time);
+                    currentCameraConfig.distance = Mathf.Lerp(currentCameraConfig.distance, dollyViewConfig.distance, time);
+                }
+                else
+                {
+                    Quaternion tmp = dollyViewConfig.GetRotation();
+
+                    currentCameraConfig.roll = tmp.eulerAngles.z;
+                    currentCameraConfig.pitch = tmp.eulerAngles.x;
+                    currentCameraConfig.yaw = tmp.eulerAngles.y;
+                    currentCameraConfig.pivot = dollyView.rail.nodesPos[dollyView.currentEndingNodeIndex];
+                    currentCameraConfig.fov = dollyViewConfig.fov;
+                    currentCameraConfig.distance = dollyViewConfig.distance;
+                }
+
+                if (Vector3.Distance(currentCameraConfig.pivot, dollyView.rail.nodesPos[dollyView.currentEndingNodeIndex]) < dollyView.tolerance)
+                    if (dollyView.currentEndingNodeIndex == dollyView.rail.nodesPos.Count - 1)
+                    {
+                        dollyView.currentStartingNodeIndex = dollyView.initialStartingNodeIndex;
+                        dollyView.currentEndingNodeIndex = dollyView.currentStartingNodeIndex + 1;
+
+                        if (!dollyView.rail.isLoop)
+                            dollyView.rail.nodesPos.Reverse();
+                    }
+
+                    else
+                    {
+                        dollyView.currentStartingNodeIndex++;
+                        dollyView.currentEndingNodeIndex++;
+                    }
+            }
+            CameraController.instance.ApplyConfiguration(CameraController.instance.camera, currentCameraConfig);
+        }
+
+        else
+        {
+            for (int i = 0; i < dollyView.rail.nodesPos.Count - 1; i++)
+            {
+                dollyView.nearestPointsOnSegment[i] = MathUtils.GetNearestPointOnSegment(dollyView.rail.nodesPos[i], dollyView.rail.nodesPos[i + 1], dollyView.target.transform.position);
+                dollyView.distances[i] = Vector3.Distance(dollyView.nearestPointsOnSegment[i], dollyView.target.transform.position);
+
+                if (dollyView.min > dollyView.distances[i])
+                {
+                    dollyView.min = dollyView.distances[i];
+                    dollyView.nearestNodeIndex = i;
+                    dollyView.segmentIndex = i;
+                    dollyView.currentSegmentIndex = i;
+                }
+            }
+
+            if (time < 1)
+            {
+                Quaternion tmp = Quaternion.Lerp(currentCameraConfig.GetRotation(), dollyViewConfig.GetRotation(), time);
+
+                currentCameraConfig.roll = tmp.eulerAngles.z;
+                currentCameraConfig.pitch = tmp.eulerAngles.x;
+                currentCameraConfig.yaw = tmp.eulerAngles.y;
+                currentCameraConfig.pivot = Vector3.Lerp(currentCameraConfig.pivot, dollyView.nearestPointsOnSegment[dollyView.nearestNodeIndex], time);
+                currentCameraConfig.fov = Mathf.Lerp(currentCameraConfig.fov, dollyViewConfig.fov, time);
+                currentCameraConfig.distance = Mathf.Lerp(currentCameraConfig.distance, dollyViewConfig.distance, time);
+            }
+
+            else
+            {
+                Quaternion tmp = dollyViewConfig.GetRotation();
+
+                currentCameraConfig.roll = tmp.eulerAngles.z;
+                currentCameraConfig.pitch = tmp.eulerAngles.x;
+                currentCameraConfig.yaw = tmp.eulerAngles.y;
+                currentCameraConfig.pivot = dollyView.nearestPointsOnSegment[dollyView.nearestNodeIndex];
+                currentCameraConfig.fov = dollyViewConfig.fov;
+                currentCameraConfig.distance = dollyViewConfig.distance;
+            }
+
+            CameraController.instance.ApplyConfiguration(CameraController.instance.camera, currentCameraConfig);
+
+            // Clear
+            dollyView.min = float.MaxValue;
+            Array.Clear(dollyView.distances, 0, dollyView.distances.Length);
+        }
     }
 }

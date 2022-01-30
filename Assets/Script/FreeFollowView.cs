@@ -4,33 +4,94 @@ using UnityEngine;
 
 public class FreeFollowView : Aview
 {
-    public float[] pitch = new float[] { 0, 0.5f, 1 };
-    public float[] roll = new float[] { 0, 0.5f, 1 };
-    public float[] fov = new float[] { 0, 0.5f, 1 };
+    public float[] pitch = new float[] { 0, 0, 0 };
+    public float[] roll = new float[] { 0, 0, 0};
+    public float[] fov = new float[] { 0, 0, 0 };
 
-    public float yaw, yawSpeed;
+    [Range(0, 360)] public float yaw;
+    public float yawSpeed;
     [Range(0,1)] public float curvePosition;
     public float curveSpeed;
 
     public GameObject target;
     public Curve curve;
 
+    private CameraConfiguration freeFollowViewConfig;
+
     void Start()
     {
-        
+        freeFollowViewConfig = GetConfiguration();
     }
 
     void Update()
     {
-        /*yaw = Input.GetAxis("Horizontal") * yawSpeed * Time.deltaTime;
-        yaw = Mathf.Clamp(yaw, -90, 90);*/
+        float time = Time.deltaTime * curveSpeed;
 
-        //yaw = Vector3.Lerp(transform.position.y, yaw, )
+        yaw += Input.GetAxis("Horizontal") * yawSpeed;
+        yaw = Mathf.Clamp(yaw, 0, 360);
 
-        yaw = Input.GetAxis("Horizontal");
-        //transform.localRotation = new Quaternion(transform.localRotation.eulerAngles.x, transform.localRotation.eulerAngles.y, yaw, 1);
-        curvePosition = Input.GetAxis("Vertical") * curveSpeed;
+        curvePosition += Input.GetAxis("Vertical") * curveSpeed;
+        curvePosition = Mathf.Clamp(curvePosition, 0, 1);
+
+        if (time < 1)
+        {
+            if (curvePosition >= 0 && curvePosition < 0.5f)
+            {
+                freeFollowViewConfig.roll = Mathf.Lerp(freeFollowViewConfig.roll, roll[0], time);
+                freeFollowViewConfig.pitch = Mathf.Lerp(freeFollowViewConfig.pitch, pitch[0], time);
+                freeFollowViewConfig.fov = Mathf.Lerp(freeFollowViewConfig.fov, fov[0], time);
+            }
+
+            if (curvePosition == 0.5f)
+            {
+                freeFollowViewConfig.roll = Mathf.Lerp(freeFollowViewConfig.roll, roll[1], time);
+                freeFollowViewConfig.pitch = Mathf.Lerp(freeFollowViewConfig.pitch, pitch[1], time);
+                freeFollowViewConfig.fov = Mathf.Lerp(freeFollowViewConfig.fov, fov[1], time);
+            }
+
+            if (curvePosition >= 0.5f && curvePosition <= 1f)
+            {
+                freeFollowViewConfig.roll = Mathf.Lerp(freeFollowViewConfig.roll, roll[2], time);
+                freeFollowViewConfig.pitch = Mathf.Lerp(freeFollowViewConfig.pitch, pitch[2], time);
+                freeFollowViewConfig.fov = Mathf.Lerp(freeFollowViewConfig.fov, fov[2], time);
+
+            }
+
+            freeFollowViewConfig.yaw = Mathf.Lerp(freeFollowViewConfig.yaw, yaw, time);
+            freeFollowViewConfig.pivot = transform.position = Vector3.Lerp(freeFollowViewConfig.GetPosition(), curve.GetPosition(curvePosition), time);
+        }
+
+        else
+        {
+            if (curvePosition >= 0 && curvePosition < 0.5f)
+            {
+                freeFollowViewConfig.roll = roll[0];
+                freeFollowViewConfig.pitch = pitch[0];
+                freeFollowViewConfig.fov = fov[0];
+            }
+
+            if (curvePosition == 0.5f)
+            {
+                freeFollowViewConfig.roll = roll[1];
+                freeFollowViewConfig.pitch = pitch[1];
+                freeFollowViewConfig.fov = fov[1];
+            }
+
+            if (curvePosition >= 0.5f && curvePosition <= 1f)
+            {
+                freeFollowViewConfig.roll = roll[2];
+                freeFollowViewConfig.pitch = pitch[2];
+                freeFollowViewConfig.fov = fov[2];
+            }
+
+            freeFollowViewConfig.yaw = yaw;
+            freeFollowViewConfig.pivot = transform.position = curve.GetPosition(curvePosition);
+
+
+        }
+        curve.gameObject.transform.position = target.transform.position;
     }
+
     public Matrix4x4 ComputeCurveToWorldMatrix()
     {
         Quaternion rotation = Quaternion.Euler(0, yaw, 0);
@@ -41,7 +102,6 @@ public class FreeFollowView : Aview
     {
         Vector3 dir = Vector3.Normalize(target.transform.position - transform.position);
 
-        float yaw = Mathf.Atan2(dir.x, dir.z) * Mathf.Rad2Deg;
         float pitch = -Mathf.Asin(dir.y) * Mathf.Rad2Deg;
 
         CameraConfiguration config = new CameraConfiguration
@@ -49,7 +109,7 @@ public class FreeFollowView : Aview
             distance = 0,
             pivot = transform.position,
             yaw = yaw,
-            pitch = pitch,
+            pitch = this.pitch[1],
             roll = this.roll[1],
             fov = fov[1]
         };
@@ -60,12 +120,16 @@ public class FreeFollowView : Aview
     public override void OnDrawGizmos()
     {
         base.OnDrawGizmos();
-        DrawGizmos(Color.blue);
+        DrawGizmos(Color.grey);
     }
 
     public void DrawGizmos(Color color)
     {
         Gizmos.color = color;
-        Gizmos.DrawSphere(transform.position, 0.25f);
+        if (freeFollowViewConfig != null)
+        {
+            Gizmos.DrawSphere(freeFollowViewConfig.pivot, 0.25f);
+            freeFollowViewConfig.DrawGizmos(color);
+        }
     }
 }

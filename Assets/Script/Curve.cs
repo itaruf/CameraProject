@@ -28,8 +28,6 @@ public class Curve : MonoBehaviour
 
     public void OnDrawGizmos()
     {
-        /* DrawGizmo(Color.green, Matrix4x4.TRS(transform.position, Quaternion.Euler(transform.localScale.x, transform.localScale.y, transform.localScale.z), Vector3.one));*/
-
         DrawGizmo(Color.blue, transform.localToWorldMatrix);
     }
 
@@ -37,11 +35,11 @@ public class Curve : MonoBehaviour
     {
         Gizmos.color = c;
 
-        Gizmos.DrawSphere(GetPosition(0, localToWorldMatrix), 0.25f);
-        Gizmos.DrawSphere(GetPosition(0.25f, localToWorldMatrix), 0.25f);
-        Gizmos.DrawSphere(GetPosition(0.5f, localToWorldMatrix), 0.25f);
-        Gizmos.DrawSphere(GetPosition(0.75f, localToWorldMatrix), 0.25f);
-        Gizmos.DrawSphere(GetPosition(1f, localToWorldMatrix), 0.25f);
+        Gizmos.DrawSphere(GetPosition(0), 0.25f);
+        //Gizmos.DrawSphere(GetPosition(0.25f, localToWorldMatrix), 0.25f);
+        Gizmos.DrawSphere(GetPosition(0.5f), 0.25f);
+        //Gizmos.DrawSphere(GetPosition(0.75f, localToWorldMatrix), 0.25f);
+        Gizmos.DrawSphere(GetPosition(1f), 0.25f);
 
     }
 }

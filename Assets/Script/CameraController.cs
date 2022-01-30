@@ -24,6 +24,12 @@ public class CameraController : MonoBehaviour
     // 4 – Fixed Position Follow
     public FixedFollowView fixedFollowView;
 
+    // 5/6 - Dolly camera automatique
+    public DollyView dollyView;
+
+    // 4 – Cut
+    private bool isCutRequested = false;
+
     private void Awake()
     {
         if (instance == null)
@@ -63,6 +69,16 @@ public class CameraController : MonoBehaviour
             distance = ComputeAverageDistance(),
             fov = ComputeAverageFov(),
         };
+
+        if (isCutRequested)
+        {
+            isCutRequested = false;
+            ApplyConfiguration(camera, targetCameraConfiguration);
+        }
+    }
+    public void Cut()
+    {
+
     }
 
     public float ComputeAverageYaw()

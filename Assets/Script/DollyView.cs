@@ -11,28 +11,31 @@ public class DollyView : Aview
     public GameObject target;
     public Rail rail;
 
-    private readonly float tolerance = 0.1f;
-
-    public int initialStartIndex = 0;
+    public readonly float tolerance = 0.1f;
 
     public bool isAuto;
-    private float[] distances;
-    private int nearestNodeIndex = 0;
-    private float min = float.MaxValue;
-    private Vector3[] nearestPointsOnSegment;
+
+    public float[] distances;
+    public int nearestNodeIndex = 0;
+    public float min = float.MaxValue;
+    public Vector3[] nearestPointsOnSegment;
 
     public List<KeyValuePair<Vector3, Vector3>> segments;
 
-    private int currentStartingNodeIndex = 0;
-    private int currentEndingNodeIndex = 0;
+    public int currentStartingNodeIndex = 0;
+    public int currentEndingNodeIndex = 0;
     public int initialStartingNodeIndex = 0;
 
     public int currentSegmentIndex = 0;
     public int segmentIndex = 0;
 
+    private CameraConfiguration config;
+
     void Start()
     {
-        transform.position = new Vector3(rail.nodesPos[0].x, transform.position.y, transform.position.z);
+        config = GetConfiguration();
+        config.pivot = transform.position = new Vector3(rail.nodesPos[0].x, rail.nodesPos[0].y, rail.nodesPos[0].z);
+
         distances = new float[rail.nodesPos.Count - 1];
         segments = new List<KeyValuePair<Vector3, Vector3>>();
         nearestPointsOnSegment = new Vector3[rail.nodesPos.Count - 1];
@@ -80,14 +83,18 @@ public class DollyView : Aview
     void Update()
     {
         distanceOnRail = Input.GetAxis("Horizontal") * speed * Time.deltaTime;
-
         float time = Time.deltaTime * speed;
 
         if (!isAuto)
         {
             if (Input.GetAxis("Horizontal") >= 0)
             {
-                transform.position = Vector3.MoveTowards(transform.position, rail.nodesPos[currentEndingNodeIndex], distanceOnRail);
+                transform.position = Vector3.Lerp(transform.position, rail.nodesPos[currentEndingNodeIndex], distanceOnRail);
+                transform.rotation = Quaternion.Lerp(transform.rotation, config.GetRotation(), distanceOnRail);
+
+                config.roll = transform.rotation.eulerAngles.z;
+                config.pitch = transform.rotation.eulerAngles.x;
+                config.yaw = transform.rotation.eulerAngles.y;
 
                 if (Vector3.Distance(transform.position, rail.nodesPos[currentEndingNodeIndex]) < tolerance)
                     if (currentEndingNodeIndex == rail.nodesPos.Count - 1)
@@ -123,29 +130,29 @@ public class DollyView : Aview
                 }
             }
 
-            /*Debug.Log("nearestNodeIndex:" + nearestNodeIndex);
-            Debug.Log("currentSegmentIndex:" + currentSegmentIndex);
-            Debug.Log("segmentIndex:" + segmentIndex);*/
+            if (time < 1)
+            {
+                transform.rotation = Quaternion.Lerp(transform.rotation, config.GetRotation(), time);
 
-            /* if (currentSegmentIndex < segmentIndex)
-             {
-                 Debug.Log("Switch Segment");
-                 transform.position = Vector3.MoveTowards(transform.position, segments[currentSegmentIndex + 1].Key, time);
+                config.roll = transform.rotation.eulerAngles.z;
+                config.pitch = transform.rotation.eulerAngles.x;
+                config.yaw = transform.rotation.eulerAngles.y;
 
-                 if (Vector3.Distance(transform.position, nearestPointsOnSegment[segmentIndex]) < tolerance)
-                 {
-                     Debug.Log("B");
-                     currentSegmentIndex = segmentIndex;
-                 }
-             }
+                config.pivot = transform.position = Vector3.Lerp(transform.position, nearestPointsOnSegment[nearestNodeIndex], time);
+            }
 
-             else
-             {*/
-            Debug.Log("On Segment");
-            transform.position = nearestPointsOnSegment[nearestNodeIndex];
-            /* }*/
+            else
+            {
+                transform.rotation = config.GetRotation();
 
-            // clear
+                config.roll = transform.rotation.eulerAngles.z;
+                config.pitch = transform.rotation.eulerAngles.x;
+                config.yaw = transform.rotation.eulerAngles.y;
+
+                config.pivot = transform.position = nearestPointsOnSegment[nearestNodeIndex];
+            }
+
+            // Clear
             min = float.MaxValue;
             Array.Clear(distances, 0, distances.Length);
         }
