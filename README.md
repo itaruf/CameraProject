@@ -10,6 +10,6 @@ Main work done :
 - Configurate cameras
 - Maths tools
 - Camera management rules
-- Types of 3D Cameras
+- Types of 3D Cameras (Fixed, Follow, Dolly)
 - Blend Configurations
 - Camera Shakes
