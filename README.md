@@ -1,7 +1,7 @@
 # Camera Project
 # School Project
 
-Unity Project to program & manage cameras in a game.
+School Project made in Unity with the goal of programming & managing cameras in a game.
 
 Main work done : 
 
